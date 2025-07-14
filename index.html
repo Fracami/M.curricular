@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Malla Curricular - Ejemplo Prerrequisitos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 10px;
+    }
+    button {
+      display: block;
+      margin: 8px 0;
+      padding: 10px;
+      width: 100%;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+    .bloqueado {
+      background-color: #ddd;
+      color: #888;
+      cursor: not-allowed;
+    }
+    .desbloqueado {
+      background-color: #4caf50;
+      color: white;
+    }
+    .aprobado {
+      background-color: #2196f3;
+      color: white;
+      text-decoration: line-through;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Malla Curricular Interactiva</h1>
+
+  <div id="malla"></div>
+
+  <script>
+    // Definimos asignaturas con semestre y prerrequisitos
+    const asignaturas = {
+      "Matemáticas I": { semestre: 1, prerrequisitos: [] },
+      "Química I": { semestre: 1, prerrequisitos: [] },
+      "Física I": { semestre: 1, prerrequisitos: [] },
+      "Matemáticas II": { semestre: 2, prerrequisitos: ["Matemáticas I"] },
+      "Química II": { semestre: 2, prerrequisitos: ["Química I"] },
+      "Física II": { semestre: 2, prerrequisitos: ["Física I"] },
+      "Cálculo": { semestre: 3, prerrequisitos: ["Matemáticas II"] },
+      "Termodinámica": { semestre: 3, prerrequisitos: ["Física II", "Química II"] },
+    };
+
+    // Estado: bloqueado, desbloqueado o aprobado
+    const estadoAsignaturas = {};
+
+    // Inicializamos estados
+    function inicializarEstados() {
+      for (const nombre in asignaturas) {
+        if (asignaturas[nombre].prerrequisitos.length === 0) {
+          estadoAsignaturas[nombre] = "desbloqueado";
+        } else {
+          estadoAsignaturas[nombre] = "bloqueado";
+        }
+      }
+    }
+
+    // Verifica si se puede desbloquear una asignatura
+    function sePuedeDesbloquear(asignatura) {
+      const prereqs = asignaturas[asignatura].prerrequisitos;
+      return prereqs.every(pr => estadoAsignaturas[pr] === "aprobado");
+    }
+
+    // Mostrar la malla
+    function mostrarMalla() {
+      const contenedor = document.getElementById("malla");
+      contenedor.innerHTML = "";
+
+      // Ordenar por semestre
+      const semestres = {};
+      for (const nombre in asignaturas) {
+        const sem = asignaturas[nombre].semestre;
+        if (!semestres[sem]) semestres[sem] = [];
+        semestres[sem].push(nombre);
+      }
+
+      const semestresOrdenados = Object.keys(semestres).sort((a,b) => a-b);
+
+      semestresOrdenados.forEach(sem => {
+        const divSemestre = document.createElement("div");
+        divSemestre.innerHTML = `<h2>Semestre ${sem}</h2>`;
+        semestres[sem].forEach(asig => {
+          const btn = document.createElement("button");
+          btn.textContent = asig;
+          btn.className = estadoAsignaturas[asig];
+          btn.disabled = estadoAsignaturas[asig] === "bloqueado";
+
+          btn.onclick = () => {
+            if (estadoAsignaturas[asig] === "desbloqueado") {
+              aprobarAsignatura(asig);
+            }
+          };
+
+          divSemestre.appendChild(btn);
+        });
+        contenedor.appendChild(divSemestre);
+      });
+    }
+
+    // Al aprobar una asignatura
+    function aprobarAsignatura(nombre) {
+      estadoAsignaturas[nombre] = "aprobado";
+
+      for (const asig in asignaturas) {
+        if (estadoAsignaturas[asig] === "bloqueado" && sePuedeDesbloquear(asig)) {
+          estadoAsignaturas[asig] = "desbloqueado";
+        }
+      }
+
+      mostrarMalla();
+    }
+
+    inicializarEstados();
+    mostrarMalla();
+  </script>
+
+</body>
+</html>
